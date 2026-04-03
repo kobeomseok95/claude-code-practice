@@ -1,0 +1,49 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: msa-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: msa_harness
+    ports:
+      - "3306:3306"
+    volumes:
+      - ~/data/msa-harness:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  product-service:
+    build: ./product-service
+    container_name: msa-product
+    ports:
+      - "8081:8081"
+    environment:
+      DB_HOST: mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  order-service:
+    build: ./order-service
+    container_name: msa-order
+    ports:
+      - "8082:8082"
+    environment:
+      DB_HOST: mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  payment-service:
+    build: ./payment-service
+    container_name: msa-payment
+    ports:
+      - "8083:8083"
+    environment:
+      DB_HOST: mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
